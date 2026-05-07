@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+  namespace: nginx
+
+spec:
+  schedule: "0 */6 * * *"   # Every 6 hours
+
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: mysql-backup
+
+        spec:
+          containers:
+          - name: mysql-backup-container
+            image: mysql:8.0
+
+            command:
+            - /bin/sh
+            - -c
+            - |
+              TIMESTAMP=$(date +%F-%H-%M-%S)
+
+              mkdir -p /backups
+
+              mysqldump -h mysql-service \
+                        -u root \
+                        -pMyPassword \
+                        mydatabase \
+                        > /backups/mydatabase-$TIMESTAMP.sql
+
+              echo "Backup completed at $TIMESTAMP"
+
+            volumeMounts:
+            - name: backup-volume
+              mountPath: /backups
+
+          restartPolicy: OnFailure
+
+          volumes:
+          - name: backup-volume
+            hostPath:
+              path: /db-backups
+              type: DirectoryOrCreate
