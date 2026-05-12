@@ -1,1 +1,6 @@
-
+Horizontal Pod Auto Scaling
+Vertical Pod Auto scaling
+Node Affinity
+Taints/ Tolerations
+Resource Quotes & Limits
+Probes
